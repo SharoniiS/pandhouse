@@ -1,4 +1,4 @@
-/* קאמפ הפנדות: הממשק. ניתוב לפי hash, רינדור כ-HTML, ואירועים דרך האצלה על document. */
+/* פנדהאוס: הממשק. ניתוב לפי hash, רינדור כ-HTML, ואירועים דרך האצלה על document. */
 (function () {
   "use strict";
   const D = window.Domain, DB = window.DB, P = window.Panda, Can = D.Can;
@@ -24,6 +24,9 @@
   const firstName = n => String(n || "").trim().split(/\s+/)[0] || "";
   const MONTHS_IN = ["בינואר", "בפברואר", "במרץ", "באפריל", "במאי", "ביוני", "ביולי", "באוגוסט", "בספטמבר", "באוקטובר", "בנובמבר", "בדצמבר"];
   const plural = (n, one, many) => (n === 1 ? one : `${n} ${many}`);
+  const campName = s => (s && s.campName) || "פנדהאוס";
+  // "נועה", "נועה ושירה", "נועה, שירה ומאיה"
+  const joinHe = list => (list.length < 2 ? list.join("") : `${list.slice(0, -1).join(", ")} ו${list[list.length - 1]}`);
 
   const member = id => S.maps.members[id];
   function av(m, size = 36) {
@@ -122,8 +125,8 @@
   function renderChrome() {
     const d = S.data, s = d.settings || {};
     const year = (s.eventStart || "2026").slice(0, 4);
-    document.title = `קאמפ ${s.campName || "הפנדות"}`;
-    $("brand").innerHTML = `${P.logo(38)}<span><span class="brand-name">קאמפ ${esc(s.campName || "הפנדות")}</span><span class="brand-sub">מידברן ${year}</span></span>`;
+    document.title = campName(s);
+    $("brand").innerHTML = `${P.logo(38)}<span><span class="brand-name">${esc(campName(s))}</span><span class="brand-sub">מידברן ${year}</span></span>`;
     const show = !!(d.me && d.me.onboarded !== false);
     const r = route();
     const active = r.name === "team" ? "teams" : (NAV.some(n => n.id === r.name) ? r.name : "home");
@@ -149,7 +152,7 @@
     const demo = DB.mode === "local" ? DB.demoMembers() : [];
     return `<div class="auth">
       ${P.logo(116)}
-      <h1>קאמפ ${esc(s.campName || "הפנדות")}</h1>
+      <div class="auth-name"><h1>${esc(campName(s))}</h1>${s.campNameEn ? `<p class="wordmark" lang="en" dir="ltr">${esc(s.campNameEn)}</p>` : ""}</div>
       <p class="lead">מידברן ${esc((s.eventStart || "2026").slice(0, 4))}, ${esc(eventRange(s))}${s.place ? `, ${esc(s.place)}` : ""}.<br>המשימות, המשמרות וכל הפנדות במקום אחד.</p>
       ${inAppBrowser() ? `<div class="warn-box">${icon("external-link")} גוגל לא מאפשר להתחבר מתוך הדפדפן של האפליקציה הזו. צריך לפתוח את הקישור בכרום או בספארי.</div>` : ""}
       <button type="button" class="btn primary" data-demo="google">${icon("brand-google")} כניסה עם Google</button>
@@ -292,28 +295,26 @@
   }
 
   /* ---------- בית ---------- */
-  function bambooBar(c) {
-    if (!c.total) return `<div class="bamboo" aria-label="אין משימות"></div>`;
-    const order = ["done", "doing", "blocked", "todo", "idea"];
-    const label = order.filter(s => c[s]).map(s => `${c[s]} ${D.TASK_STATUS[s].label}`).join(", ");
-    return `<div class="bamboo" role="img" aria-label="${esc(label)}">${order.filter(s => c[s]).map(s => `<span class="${s}" style="flex:${c[s]}" title="${c[s]} ${D.TASK_STATUS[s].label}"></span>`).join("")}</div>`;
-  }
-  const statusLegend = () => `<div class="legend">${["done", "doing", "blocked", "todo", "idea"].map(s => `<span><i class="sw bamboo-sw" style="background:var(--st-${s});${s === "todo" || s === "idea" ? "opacity:.55" : ""}"></i>${D.TASK_STATUS[s].label}</span>`).join("")}</div>`;
-
+  // כרטיס צוות: צבע הצוות ברקע עדין, מי מוביל, כמה משימות פתוחות בכל סטטוס, וכמה הושלמו
   function teamTile(team) {
     const tasks = S.data.tasks.filter(t => t.team === team.id);
     const c = D.taskCounts(tasks);
     const ms = teamMembers(team.id).filter(m => m.status !== "out");
     const leads = teamLeads(team.id);
-    const open = c.total - c.done;
+    const pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+    const chips = ["blocked", "doing", "todo", "idea"].filter(s => c[s])
+      .map(s => `<span class="mini-pill st-${s}">${icon(D.TASK_STATUS[s].icon)}${D.TASK_STATUS[s].label} <b>${c[s]}</b></span>`).join("");
     return `<a class="team-tile" href="#/team/${team.id}" style="${teamStyle(team.id)}">
+      <span class="tile-mark" aria-hidden="true">${icon(team.icon)}</span>
       <div class="top"><span class="team-ico">${icon(team.icon)}</span>
-        <div><h3>${esc(team.name)}</h3>${leads.length
-          ? `<div class="leads">${icon("crown")} ${leads.map(m => esc(firstName(m.name))).join(", ")}</div>`
-          : `<div class="noleads">${icon("alert-triangle")} אין עדיין מוביל/ה</div>`}</div></div>
-      ${bambooBar(c)}
-      <div class="foot">${ms.length ? avStack(ms.map(m => m.id), 5, 26) : `<span class="muted">עוד אין אנשים</span>`}
-        <span>${c.total ? `${open} פתוחות${c.blocked ? `, <b style="color:var(--st-blocked)">${c.blocked} תקועות</b>` : ""}` : "אין משימות"}</span></div>
+        <div class="ttl"><h3>${esc(team.name)}</h3>${leads.length
+          ? `<div class="lead-line">${avStack(leads.map(m => m.id), 3, 22)}<span>בהובלת ${esc(joinHe(leads.map(m => firstName(m.name))))}</span></div>`
+          : `<div class="noleads">מחפשים מוביל/ה</div>`}</div></div>
+      <div class="chips">${chips || `<span class="muted small">${c.total ? "כל המשימות הושלמו" : "עוד אין משימות"}</span>`}</div>
+      <div class="foot">
+        <span class="people">${ms.length ? `${avStack(ms.map(m => m.id), 4, 24)}<span>${ms.length} בצוות</span>` : `<span class="muted">עוד אין אנשים</span>`}</span>
+        ${c.total ? `<span class="prog" title="${c.done} מתוך ${c.total} משימות הושלמו"><span class="track"><span style="width:${pct}%"></span></span>${c.done} מתוך ${c.total} הושלמו</span>` : ""}
+      </div>
     </a>`;
   }
 
@@ -378,7 +379,7 @@
       </section>` : ""}
 
       <section class="section">
-        <div class="section-head"><h2>הצוותים</h2>${statusLegend()}</div>
+        <div class="section-head"><h2>הצוותים</h2></div>
         <div class="teams-grid">${D.TEAMS.map(teamTile).join("")}</div>
       </section>
 
@@ -397,7 +398,7 @@
   /* ---------- צוותים ---------- */
   function renderTeams() {
     return `<section class="section">
-      <div class="section-head"><h1>צוותים</h1>${statusLegend()}</div>
+      <div class="section-head"><h1>צוותים</h1></div>
       <div class="teams-grid">${D.TEAMS.map(teamTile).join("")}</div>
     </section>`;
   }
@@ -952,7 +953,10 @@
   function openSettings() {
     const s = S.data.settings;
     const inner = `
-      <div class="field"><label for="st-name">שם הקאמפ</label><input id="st-name" name="campName" type="text" value="${esc(s.campName)}"><span class="hint">מופיע כ"קאמפ ${esc(s.campName)}"</span></div>
+      <div class="row2">
+        <div class="field"><label for="st-name">שם הקאמפ</label><input id="st-name" name="campName" type="text" value="${esc(s.campName)}"></div>
+        <div class="field"><label for="st-name-en">שם באנגלית</label><input id="st-name-en" name="campNameEn" type="text" dir="ltr" value="${esc(s.campNameEn)}"></div>
+      </div>
       <div class="row2">
         <div class="field"><label for="st-start">האירוע מתחיל</label><input id="st-start" name="eventStart" type="date" value="${esc(s.eventStart)}"></div>
         <div class="field"><label for="st-end">האירוע נגמר</label><input id="st-end" name="eventEnd" type="date" value="${esc(s.eventEnd)}"></div>

@@ -11,10 +11,22 @@
   const newId = p => p + "_" + (root.crypto && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10));
   const deny = () => { throw new Error("אין הרשאה לפעולה הזו."); };
 
+  // עדכון נתונים שנשמרו בגרסה קודמת של האתר
+  function migrate(s) {
+    if ((s.version || 1) < 2) {
+      // הקאמפ נקרא פנדהאוס (Pandhouse), ולא "הפנדות"
+      if (!s.settings.campName || s.settings.campName === "הפנדות") s.settings.campName = "פנדהאוס";
+      if (!s.settings.campNameEn) s.settings.campNameEn = "Pandhouse";
+      s.version = 2;
+      write(s);
+    }
+    return s;
+  }
+
   function read() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) return migrate(JSON.parse(raw));
     } catch (e) { /* אחסון חסום או פגום: מתחילים מנתוני הדגמה */ }
     const s = root.demoSeed();
     write(s);
@@ -286,7 +298,7 @@
     async saveSettings(patch) {
       return mutate((s, me) => {
         if (!D.Can.admin(me)) deny();
-        for (const k of ["campName", "eventStart", "eventEnd", "place", "joinCode"])
+        for (const k of ["campName", "campNameEn", "eventStart", "eventEnd", "place", "joinCode"])
           if (k in patch && String(patch[k]).trim()) s.settings[k] = String(patch[k]).trim();
       });
     },

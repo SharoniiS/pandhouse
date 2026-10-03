@@ -1,4 +1,4 @@
-// שרת סטטי קטן לתצוגה מקומית של אתר קאמפ הפנדות (node _serve.js)
+// שרת סטטי קטן לתצוגה מקומית של אתר פנדהאוס (node _serve.js)
 const http = require("http");
 const fs = require("fs");
 const path = require("path");

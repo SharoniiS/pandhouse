@@ -238,30 +238,54 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .mini-row .s { font-size: .82rem; color: var(--ink-3); }
 
 .teams-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.teams-grid { gap: 14px; }
+/* כרטיס צוות: הצבע של הצוות שוטף את החלק העליון ונמוג ללבן, עם סמל גדול ושקוף ברקע */
 .team-tile {
-  display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: inherit;
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px; box-shadow: var(--shadow);
-  transition: transform .15s, box-shadow .15s;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; gap: 14px; text-decoration: none; color: inherit;
+  background: linear-gradient(170deg, var(--team-soft) 0%, color-mix(in srgb, var(--team-soft) 45%, var(--card)) 45%, var(--card) 80%);
+  border: 1px solid color-mix(in srgb, var(--team) 14%, var(--line));
+  border-radius: 22px; padding: 18px; box-shadow: var(--shadow);
+  transition: transform .18s, box-shadow .18s;
 }
-.team-tile:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -16px rgba(30, 35, 32, .45); }
-.team-tile .top { display: flex; align-items: center; gap: 10px; }
+.team-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--team) 55%, transparent); }
+.tile-mark {
+  position: absolute; z-index: -1; inset-inline-end: -10px; top: -14px;
+  font-size: 6.5rem; line-height: 1; color: var(--team); opacity: .09; pointer-events: none; transform: rotate(-12deg);
+}
+.tile-mark .ti { font-size: inherit; }
+.team-tile .top { display: flex; align-items: center; gap: 12px; }
+.team-tile .ttl { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .team-ico {
   width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex: none;
   background: var(--team-soft); color: var(--team); font-size: 1.45rem;
 }
-.team-tile h3 { font-size: 1.2rem; }
-.team-tile .leads { font-size: .86rem; color: var(--ink-2); }
-.team-tile .noleads { font-size: .86rem; color: var(--st-blocked); font-weight: 500; }
-.team-tile .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .86rem; color: var(--ink-2); }
+.team-tile .team-ico {
+  width: 48px; height: 48px; border-radius: 16px; background: var(--card); font-size: 1.55rem;
+  box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--team) 60%, transparent);
+}
+.team-tile h3 { font-size: 1.3rem; }
+.lead-line { display: flex; align-items: center; gap: 6px; font-size: .88rem; color: var(--ink-2); }
+.lead-line .av-stack .panda-av { border-color: color-mix(in srgb, var(--team-soft) 60%, var(--card)); }
+.team-tile .noleads {
+  font-size: .82rem; font-weight: 500; color: #9a4a55; background: rgba(255, 255, 255, .7);
+  border: 1px dashed #e3b7bd; border-radius: 999px; padding: 1px 10px; width: fit-content;
+}
+.team-tile .chips { min-height: 28px; align-items: center; }
+.mini-pill {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  font-size: .8rem; font-weight: 500; padding: 3px 10px 3px 9px; border-radius: 999px;
+}
+.mini-pill b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.team-tile .foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  margin-top: auto; font-size: .84rem; color: var(--ink-2); padding-top: 12px; border-top: 1px dashed color-mix(in srgb, var(--team) 20%, var(--line));
+}
+.team-tile .people { display: flex; align-items: center; gap: 8px; }
+.prog { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prog .track { width: 56px; height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--team) 14%, var(--card)); overflow: hidden; }
+.prog .track span { display: block; height: 100%; background: var(--team); border-start-end-radius: 4px; border-end-end-radius: 4px; }
 
-/* bamboo progress: status segments with gaps, like the nodes of a bamboo stalk */
-.bamboo { display: flex; gap: 2px; height: 10px; border-radius: 6px; overflow: hidden; background: var(--paper); }
-.bamboo span { display: block; height: 100%; }
-.bamboo .idea { background: var(--st-idea); opacity: .55; }
-.bamboo .todo { background: var(--st-todo); opacity: .55; }
-.bamboo .doing { background: var(--st-doing); }
-.bamboo .blocked { background: var(--st-blocked); }
-.bamboo .done { background: var(--st-done); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8rem; color: var(--ink-2); }
 .legend i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-inline-end: 5px; vertical-align: -1px; }
 
@@ -605,3 +629,7 @@ body.sheet-open { overflow: hidden; }
 }
 .toast button { background: none; border: 0; color: var(--sun); font-weight: 600; cursor: pointer; padding: 4px; }
 @media (min-width: 900px) { .toast { bottom: 24px; } }
+
+/* שם הקאמפ במסך הכניסה, בעברית ומתחתיו באנגלית */
+.auth-name { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.wordmark { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; letter-spacing: .12em; color: var(--bamboo); }

@@ -94,8 +94,8 @@
     ];
 
     return {
-      version: 1,
-      settings: { campName: "הפנדות", eventStart: "2026-11-02", eventEnd: "2026-11-07", place: "הר צין", joinCode: "PANDA" },
+      version: 2,
+      settings: { campName: "פנדהאוס", campNameEn: "Pandhouse", eventStart: "2026-11-02", eventEnd: "2026-11-07", place: "הר צין", joinCode: "PANDA" },
       members, privates, tasks, shifts, activity,
       accounts: {}
     };
